@@ -1,0 +1,82 @@
+{-# OPTIONS --safe #-}
+
+open import Arch.General.Execution using (Execution; WellFormed)
+open import Arch.TCG using (LabelTCG)
+open import TransformFWAW using (FWAW-Restricted)
+
+
+module Proof.Elimination.FWAW.Mapping (dst : Execution LabelTCG) (dst-ok : FWAW-Restricted dst) where
+
+-- Stdlib imports
+import Relation.Binary.PropositionalEquality as Eq
+open Eq using (_≡_; _≢_; refl; subst; cong) renaming (sym to ≡-sym; trans to ≡-trans)
+open import Level using (Level) renaming (zero to ℓzero)
+open import Function using (_∘_; flip)
+open import Data.Product using (_×_; _,_; proj₁; proj₂; ∃-syntax)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Relation.Nullary using (¬_; yes; no)
+open import Relation.Unary using (Pred; _∈_)
+open import Relation.Binary using (Rel; Irreflexive; Transitive; Trichotomous; tri<; tri≈; tri>)
+open import Relation.Binary.Construct.Closure.Transitive using (TransClosure; _∷_; [_])
+-- Library imports
+open import Dodo.Unary
+open import Dodo.Binary
+-- Local imports: General
+open import Helpers
+-- Local imports: Architecture Specifications
+open import Arch.General.Event
+open import Arch.General.Properties
+open import Arch.General.Execution as Ex
+open import Arch.General.DerivedWellformed
+open import Arch.TCG as TCG
+open import Arch.TCG.Detour
+-- Local imports: Theorem Specification
+open import TransformFWAW
+-- Local imports: Proof Components
+open import Proof.Elimination.FWAW.Execution dst dst-ok as FWAW-Ex
+open import Proof.Elimination.FWAW.WellFormed dst dst-ok as FWAW-Wf
+import Proof.Framework LabelTCG dst dst-wf as Ψ
+import Proof.Elimination.Framework dst dst-wf as Δ
+
+
+open FWAW-Restricted
+open Ex.Execution
+open Ex.WellFormed
+open Ψ.Definitions ev[⇐]
+open Δ.Definitions δ
+open FWAW-Ex.Extra
+
+
+events-preserved : ∀ {xᵗ : Event LabelTCG} → xᵗ ≢ elim-ev dst-ok → xᵗ ∈ events dst → xᵗ ∈ events src
+events-preserved {event-init _ _ _} ¬xᵗ-elim x∈dst = events[⇐] x∈dst
+events-preserved xᵗ@{event-skip uid tid} ¬xᵗ-elim x∈dst with ℕ-dec uid (elim-uid dst-ok)
+... | yes refl    = ⊥-elim (¬xᵗ-elim (unique-ids dst-wf uid (has-uid-skip , x∈dst) (elim-has-uid dst-ok , elim∈ex dst-ok)))
+... | no uid≢elim = _ , x∈dst , lemma
+  where
+  -- Unsure why this lemma is needed, as we're above already splitting on
+  -- > ℕ-dec uid (elim-uid dst-ok)
+  -- But without this lemma, it doesn't type-check
+  lemma : xᵗ ≡ ev[⇐] x∈dst
+  lemma with ℕ-dec uid (elim-uid dst-ok)
+  ... | yes refl = ⊥-elim (uid≢elim refl)
+  ... | no _     = refl
+events-preserved {event _ _ _} ¬xᵗ-elim x∈dst = events[⇐] x∈dst
+
+
+src-elim-ev-def : src-elim-ev ≡ event (elim-uid dst-ok) (elim-tid dst-ok) (lab-w tmov (elim-loc dst-ok) (elim-val dst-ok))
+src-elim-ev-def with elim-ev-skip dst-ok
+-- this is strange, but necessary as it matches over the case-split in `ev[⇐]`
+src-elim-ev-def | ev-skip with ℕ-dec (elim-uid dst-ok) (elim-uid dst-ok)
+src-elim-ev-def | ev-skip | yes refl = refl
+src-elim-ev-def | ev-skip | no uid≢uid = ⊥-elim (uid≢uid refl)
+
+
+src-mapping : FWAWMapping src dst-ok
+src-mapping =
+  record
+    { src-elim-ev      = src-elim-ev
+    ; src-elim-ev-def  = src-elim-ev-def
+    ; src-elim-ev∈src  = elim∈src
+    ; events-preserved = events-preserved
+    }
