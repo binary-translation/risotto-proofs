@@ -1,0 +1,10 @@
+# Ignore everything
+*
+# Only include
+!src/
+!lib/
+!*.agda-lib
+# Inside the `src/` and `lib/` directories, ignore:
+**/*.agdai
+**/*.md
+**/_build
