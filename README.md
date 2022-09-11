@@ -43,11 +43,11 @@ The proofs consists of several parts (in `src/`):
   * `Armv8.agda` - The "Armed Cats" Armv8 model, with our proposed change
   * `X86.agda` - The X86 model
   * `TCG.agda` - Our TCG model
-* `Map*to*.agda` - The *specification* of mapping executions between architectures (see section **(2.1)**)
-* `Transform*.agda` - The *specificaton* of elimination and reordering transformations on TCG (see section **(2.1)**)
+* `Map*to*.agda` - The *specification* of mapping executions between architectures
+* `Transform*.agda` - The *specificaton* of elimination and reordering transformations on TCG
 * `Proof/` - Contains all the proofs (also referenced by `Main.agda`)
   * `Framework.agda` - A general framework for memory model proofs
-  * `Mapping/` - The mapping proofs between architectures (see section **(2.1)**)
+  * `Mapping/` - The mapping proofs between architectures
     * `Framework.agda` - A framework for architecture-mapping proofs. Extends the general framework
-  * `Elimination/` - Elimination proofs (see section **(2.1)**)
-  * `Reorder/` - Reordering proofs (see section **(2.1)**)
+  * `Elimination/` - Elimination proofs
+  * `Reorder/` - Reordering proofs
